@@ -1,0 +1,6 @@
+---
+- name: Useless play
+  hosts: all
+  tasks:
+    - debug:
+        msg: Simply dumping something for the sake of testing
