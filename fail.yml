@@ -1,0 +1,7 @@
+---
+- name: Fail on purpose
+  hosts: all
+  gather_facts: no
+  tasks:
+    - fail:
+        msg: KABOOM
