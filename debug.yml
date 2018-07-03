@@ -1,6 +1,10 @@
 ---
 - name: Useless play
   hosts: all
+  gather_facts: no
   tasks:
     - debug:
         msg: Simply dumping something for the sake of testing
+
+    - debug:
+        var: inventory_hostname
