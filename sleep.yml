@@ -1,0 +1,12 @@
+---
+- name: Long playbook using sleep
+  hosts: all
+  gather_facts: no
+  vars:
+    sleep_time: 5
+    sleep_count: 10
+  tasks:
+    - name: Sleep {{ sleep_time }} seconds
+      command: sleep {{ sleep_time }}
+      with_sequence: start=0 count={{ sleep_count }}
+      
