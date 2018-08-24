@@ -1,0 +1,5 @@
+---
+- name: Install pre-migration assets for RHEL
+  hosts: all
+  roles:
+    - ims.rhel_pre_migration
