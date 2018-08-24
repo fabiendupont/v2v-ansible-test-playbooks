@@ -1,0 +1,4 @@
+{% for nic in ansible_interfaces if not nic == 'lo' %}
+{% set macaddress = hostvars[inventory_hostname]['ansible_%s' | format(nic) | regex_replace('-', '_')].macaddress %}
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="{{ macaddress }}", ATTR{type}=="1", KERNEL=="*", NAME="{{ nic }}"
+{% endfor %}

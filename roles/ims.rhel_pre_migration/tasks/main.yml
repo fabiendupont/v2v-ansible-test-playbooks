@@ -1,0 +1,7 @@
+---
+- debug:
+    msg: "Role - RHEL Pre Migration"
+- include_tasks: "{{ item }}"
+  with_items:
+    - "force_nic_name.yml" 
+    - "install_qemu_agent.yml"

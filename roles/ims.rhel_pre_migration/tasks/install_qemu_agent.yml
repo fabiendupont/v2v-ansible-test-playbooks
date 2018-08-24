@@ -1,0 +1,161 @@
+---
+- block:
+  - name: Register against RHN
+    rhn_register:
+      activationkey: "{{ rhn_config.activationkey | default(omit) }}"
+      enable_eus: "{{ rhn_config.enable_eus | default(omit) }}"
+      nopackages: "{{ rhn_config.nopackages | default(omit) }}"
+      password: "{{ rhn_config.password }}"
+      profilename: "{{ rhn_config.profilename | default(inventory_hostname) }}"
+      server_url: "{{ rhn_config.server_url }}"
+      sslcacert: "{{ rhn_config.sslcacert | default(omit) }}"
+      state: "{{ rhn_config.state | default(omit) }}"
+      systemorgid: "{{ rhn_config.systemorgid | default(omit) }}"
+      username: "{{ rhn_config.username }}"
+
+  - name: Add RHN channels
+    rhn_channel:
+      name: "{{ item.name }}"
+      password: "{{ rhn_config.password }}"
+      state: "{{ item.state | default(omit) }}"
+      sysname: "{{ rhn_config.profilename | default(inventory_hostname) }}"
+      url: "{{ rhn_config.server_url }}"
+      user: "{{ rhn_config.username }}"
+    with_items: "{{ rhn_channels }}"
+
+  when:
+    - "rhn_config is defined"
+
+- block:
+  - block:
+    - name: Check if katello-ca-consumer package is installed
+      command: "rpm -qa 'katello-ca-consumer*'"
+      args:
+        warn: false
+      register: katello_ca_consumer
+      changed_when: false
+      failed_when: not katello_ca_consumer.stdout
+      ignore_errors: true
+
+    - name: Install Satellite 6 CA certificate
+      command: "rpm -U http://{{ rhsm_config.server_hostname }}/pub/katello-ca-consumer-latest.noarch.rpm"
+      args:
+        warn: false
+      when:
+        - katello_ca_consumer.failed
+
+    when: "rhsm_config.server_hostname is defined"
+
+  - name: Register using subscription-manager
+    redhat_subscription:
+      activationkey: "{{ rhsm_config.activationkey | default(omit) }}"
+      auto_attach: "{{ rhsm_config.auto_attach | default(omit) }}"
+      consumer_id: "{{ rhsm_config.consumer_id |default(omit) }}"
+      consumer_name: "{{ rhsm_config.consumer_name | default(omit) }}"
+      consumer_type: "{{ rhsm_config.consumer_type | default(omit) }}"
+      environment: "{{ rhsm_config.environment | default(omit) }}"
+      force_register: "{{ rhsm_config.force_register | default(omit) }}"
+      org_id: "{{ rhsm_config.org_id | default(omit) }}"
+      password: "{{ rhsm_config.password | default(omit) }}"
+      pool: "{{ rhsm_config.pool | default(omit) }}"
+      pool_ids: "{{ rhsm_config.pool_ids | default(omit) }}"
+      rhsm_baseurl: "{{ rhsm_config.rhsm_baseurl | default(omit) }}"
+      server_hostname: "{{ rhsm_config.server_hostname | default(omit) }}"
+      server_insecure: "{{ rhsm_config.server_insecure | default(omit) }}"
+      server_proxy_hostname: "{{ rhsm_config.server_proxy_hostname | default(omit) }}"
+      server_proxy_password: "{{ rhsm_config.server_proxy_password | default(omit) }}"
+      server_proxy_port: "{{ rhsm_config.server_proxy_port | default(omit) }}"
+      server_proxy_user: "{{ rhsm_config.server_proxy_user | default(omit) }}"
+      state: "{{ rhsm_config.state | default(omit) }}"
+      username: "{{ rhsm_config.username | default(omit) }}"
+
+  - name: Add repositories with subscription-manager
+    command: "subscription-manager repos --enable='{{ item.name }}'"
+    with_items: "{{ rhsm_repositories }}"
+    when:
+      - "rhsm_repositories is defined"
+
+  when:
+    - "rhsm_config is defined"
+
+- name: Add direct repositories
+  yum_repository:
+    async: "{{ item.async | default(omit) }}"
+    attributes: "{{ item.attributes | default(omit) }}"
+    bandwidth: "{{ item.bandwidth | default(omit) }}"
+    baseurl: "{{ item.baseurl | default(omit) }}"
+    cost: "{{ item.cost | default(omit) }}"
+    deltarpm_metadata_percentage: "{{ item.deltarpm_metadata_percentage | default(omit) }}"
+    deltarpm_percentage: "{{ item.deltarpm_percentage | default(omit) }}"
+    description: "{{ item.description | default(omit) }}"
+    enabled: "{{ item.enabled | default(omit) }}"
+    enablegroups: "{{ item.enablegroups | default(omit) }}"
+    exclude: "{{ item.exclude | default(omit) }}"
+    failovermethod: "{{ item.failovermethod | default(omit) }}"
+    file: "{{ item.file | default(omit) }}"
+    gpgcakey: "{{ item.gpgcakey | default(omit) }}"
+    gpgcheck: "{{ item.gpgcheck | default(omit) }}"
+    gpgkey: "{{ item.gpgkey | default(omit) }}"
+    group: "{{ item.group | default(omit) }}"
+    http_caching: "{{ item.http_caching | default(omit) }}"
+    include: "{{ item.include | default(omit) }}"
+    includepkgs: "{{ item.includepkgs | default(omit) }}"
+    ip_resolve: "{{ item.ip_resolve | default(omit) }}"
+    keepalive: "{{ item.keepalive | default(omit) }}"
+    keepcache: "{{ item.keepcache | default(omit) }}"
+    metadata_expire: "{{ item.metadata_expire | default(omit) }}"
+    metadata_expire_filter: "{{ item.metadata_expire_filter | default(omit) }}"
+    metalink: "{{ item.metalink | default(omit) }}"
+    mirrorlist: "{{ item.mirrorlist | default(omit) }}"
+    mirrorlist_expire: "{{ item.mirrorlist_expire | default(omit) }}"
+    mode: "{{ item.mode | default(omit) }}"
+    name: "{{ item.name }}"
+    owner: "{{ item.owner | default(omit) }}"
+    password: "{{ item.password | default(omit) }}"
+    priority: "{{ item.priority | default(omit) }}"
+    protect: "{{ item.protect | default(omit) }}"
+    proxy: "{{ item.proxy | default(omit) }}"
+    proxy_password: "{{ item.proxy_password | default(omit) }}"
+    proxy_username: "{{ item.proxy_username | default(omit) }}"
+    repo_gpgcheck: "{{ item.repogpgcheck | default(omit) }}"
+    reposdir: "{{ item.reposdir | default(omit) }}"
+    retries: "{{ item.retries | default(omit) }}"
+    s3_enabled: "{{ item.s3_enabled | default(omit) }}"
+    selevel: "{{ item.selevel | default(omit) }}"
+    serole: "{{ item.serole | default(omit) }}"
+    setype: "{{ item.setype | default(omit) }}"
+    seuser: "{{ item.seuser | default(omit) }}"
+    skip_if_unavailable: "{{ item.skip_if_unavailable | default(omit) }}"
+    ssl_check_cert_permissions: "{{ item.ssl_check_cert_permissions | default(omit) }}"
+    sslcacert: "{{ item.sslcacert | default(omit) }}"
+    sslclientcert: "{{ item.sslclientcert | default(omit) }}"
+    sslclientkey: "{{ item.sslclientkey | default(omit) }}"
+    sslverify: "{{ item.sslverify | default(omit) }}"
+    state: "{{ item.state | default(omit) }}"
+    throttle: "{{ item.throttle | default(omit) }}"
+    timeout: "{{ item.timeout | default(omit) }}"
+    ui_repoid_vars: "{{ item.ui_repoid_vars | default(omit) }}"
+    unsafe_writes: "{{ item.unsafe_writes | default(omit) }}"
+    username: "{{ item.username | default(omit) }}"
+  with_items: "{{ yum_repositories }}"
+  when:
+    "yum_repositories is defined"
+
+- name: Ensure qemu and ovirt guest agents are installed (RHEL 7)
+  yum:
+    name: qemu-guest-agent
+    state: present
+  when: ansible_distribution == "RedHat" and ansible_distribution_major_version >= "7"
+
+- name: Ensure qemu and ovirt guest agents are installed (RHEL 6)
+  yum:
+    name: qemu-guest-agent
+    state: present
+  when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "6"
+
+- name: Ensure qemu and ovirt guest agents are installed (RHEL 5)
+  yum:
+    name: rhevm-guest-agent
+    state: present
+    enablerepo: rhel-5-server-rhv-4-agent-rpms 
+  when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "5"
