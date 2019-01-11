@@ -1,7 +1,9 @@
 ---
-- hosts: all
+- name: Replace VMware with OpenStack
+  hosts: all
   tasks:
-    - replace:
+    - name: Replace VMware with OpenStack
+      replace:
         path: /var/www/html/index.php
         regexp: VMware
         replace: OpenStack
