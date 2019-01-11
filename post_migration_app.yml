@@ -1,0 +1,7 @@
+---
+- hosts: all
+  tasks:
+    - replace:
+        path: /var/www/html/index.php
+        regexp: VMware
+        replace: OpenStack
